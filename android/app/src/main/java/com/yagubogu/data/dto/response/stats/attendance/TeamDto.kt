@@ -1,0 +1,26 @@
+package com.yagubogu.data.dto.response.stats.attendance
+
+import com.yagubogu.domain.model.Team
+import com.yagubogu.presentation.stats.attendance.TeamItem
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class TeamDto(
+    @SerialName("code")
+    val code: String, // 팀 코드
+    @SerialName("name")
+    val name: String, // 팀 이름
+    @SerialName("score")
+    val score: Int, // 팀 점수
+    @SerialName("isMyTeam")
+    val isMyTeam: Boolean, // 내가 응원하는 팀 여부
+) {
+    fun toPresentation(): TeamItem =
+        TeamItem(
+            team = Team.getByCode(code),
+            name = name,
+            score = score,
+            isMyTeam = isMyTeam,
+        )
+}
