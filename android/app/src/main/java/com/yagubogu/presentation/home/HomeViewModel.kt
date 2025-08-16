@@ -56,6 +56,9 @@ class HomeViewModel(
     private val _victoryFairyRanking = MutableLiveData<VictoryFairyRanking>()
     val victoryFairyRanking: LiveData<VictoryFairyRanking> get() = _victoryFairyRanking
 
+    private val _isCheckInLoading = MutableLiveData<Boolean>()
+    val isCheckInLoading: LiveData<Boolean> get() = _isCheckInLoading
+
     init {
         fetchAll()
     }
@@ -67,6 +70,7 @@ class HomeViewModel(
     }
 
     fun checkIn() {
+        _isCheckInLoading.value = true
         locationRepository.getCurrentCoordinate(
             onSuccess = { currentCoordinate: Coordinate ->
                 handleCheckIn(currentCoordinate)
@@ -152,6 +156,7 @@ class HomeViewModel(
                 }.onFailure {
                     Timber.w(stadiumsResult.exceptionOrNull(), "API 호출 실패")
                 }
+            _isCheckInLoading.value = false
         }
     }
 
@@ -178,6 +183,7 @@ class HomeViewModel(
                 _checkInUiEvent.setValue(CheckInUiEvent.CheckInSuccess(nearestStadium))
             }.onFailure { exception: Throwable ->
                 Timber.w(exception, "API 호출 실패")
+                _checkInUiEvent.setValue(CheckInUiEvent.CheckInFailure)
             }
     }
 
