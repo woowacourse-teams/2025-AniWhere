@@ -527,6 +527,23 @@ class CheckInServiceTest {
         assertThat(actual.fanRateByGames()).containsExactlyElementsOf(expected.fanRateByGames());
     }
 
+    @DisplayName("오늘 경기 구장별 팬 점유율 조회 – 경기가 없으면 null이 아닌 빈 리스트를 반환한다")
+    @Test
+    void findFanRatesByGames_returnsEmptyListWhenNoMyTeamGames() {
+        // given
+        Member fora = memberFactory.save(b -> b.team(kt).nickname("포라"));
+        long memberId = fora.getId();
+        LocalDate startDate = LocalDate.of(2025, 7, 25);
+
+        FanRateResponse expected = new FanRateResponse(List.of());
+
+        // when
+        FanRateResponse actual = checkInService.findFanRatesByGames(memberId, startDate);
+
+        // then
+        assertThat(actual.fanRateByGames()).containsExactlyElementsOf(expected.fanRateByGames());
+    }
+
     private void createCheckInsForGame(Team team, Game game, int count) {
         for (int i = 0; i < count; i++) {
             Member member = memberFactory.save(b -> b.team(team));
