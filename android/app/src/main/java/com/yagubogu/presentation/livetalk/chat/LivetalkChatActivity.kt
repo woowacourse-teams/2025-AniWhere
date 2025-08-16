@@ -39,6 +39,22 @@ class LivetalkChatActivity : AppCompatActivity() {
         binding.ivArrowLeft.setOnClickListener {
             finish()
         }
+
+        binding.rvChatMessages.addOnScrollListener(
+            object : RecyclerView.OnScrollListener() {
+                override fun onScrolled(
+                    recyclerView: RecyclerView,
+                    dx: Int,
+                    dy: Int,
+                ) {
+                    super.onScrolled(recyclerView, dx, dy)
+                    // 스크롤이 최상단에 도달했을 때만 과거 메시지 로드
+                    if (!recyclerView.canScrollVertically(-1)) {
+                        viewModel.fetchBeforeTalks()
+                    }
+                }
+            },
+        )
     }
 
     private fun setupRecyclerView() {
@@ -55,25 +71,37 @@ class LivetalkChatActivity : AppCompatActivity() {
             itemAnimator = null
             clipToPadding = false
         }
-
-        livetalkChatAdapter.registerAdapterDataObserver(
-            object :
-                RecyclerView.AdapterDataObserver() {
-                override fun onItemRangeInserted(
-                    positionStart: Int,
-                    itemCount: Int,
-                ) {
-                    super.onItemRangeInserted(positionStart, itemCount)
-                    binding.rvChatMessages.scrollToPosition(0)
-                }
-            },
-        )
     }
 
     private fun setupObservers() {
         viewModel.liveTalkChatBubbleItem.observe(this) { livetalkChatBubbleItems: List<LivetalkChatBubbleItem> ->
-            livetalkChatAdapter.submitList(livetalkChatBubbleItems)
+            val layoutManager = binding.rvChatMessages.layoutManager as LinearLayoutManager
+
+            val oldFirstItemId =
+                livetalkChatAdapter.currentList
+                    .firstOrNull()
+                    ?.livetalkChatItem
+                    ?.chatId
+
+            livetalkChatAdapter.submitList(livetalkChatBubbleItems) {
+                val newFirstItemId = livetalkChatBubbleItems.firstOrNull()?.livetalkChatItem?.chatId
+                val isNewMessageArrived = oldFirstItemId != null && oldFirstItemId != newFirstItemId
+
+                if (isNewMessageArrived) {
+                    layoutManager.scrollToPosition(0)
+                }
+            }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        viewModel.startChatPolling()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        viewModel.stopChatPolling()
     }
 
     companion object {
